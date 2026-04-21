@@ -22,5 +22,101 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+/* Move Next.js development overlay to bottom right */
+svg[data-next-mark-loading] {
+  position: fixed !important;
+  bottom: 1rem !important;
+  right: 1rem !important;
+  top: auto !important;
+  left: auto !important;
+}
+
+/* Target the parent button/container */
+svg[data-next-mark-loading] {
+  transform: translate(0, 0) !important;
+}
+
+button:has(> svg[data-next-mark-loading]),
+div:has(> svg[data-next-mark-loading]) {
+  position: fixed !important;
+  bottom: 1rem !important;
+  right: 1rem !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+}
+
+/* Style the error dialog */
+[data-nextjs-dialog-overlay],
+[data-nextjs-toast-errors-parent] {
+  bottom: 4rem !important;
+  left: auto !important;
+  right: 1rem !important;
+  top: auto !important;
+  width: auto !important;
+  position: fixed !important;
+}
+
+[data-nextjs-dialog],
+[data-nextjs-toast] {
+  bottom: 4rem !important;
+  left: auto !important;
+  right: 1rem !important;
+  top: auto !important;
+  position: fixed !important;
+}
+
+/* Target the turbopack indicator specifically */
+div:has(> button[data-next-turbopack-dialog]) {
+  bottom: 1rem !important;
+  left: auto !important;
+  right: 1rem !important;
+  top: auto !important;
+  position: fixed !important;
 }

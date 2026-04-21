@@ -3,25 +3,35 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '../components/Logo';
+import Sidebar from '../components/Sidebar';
 
-interface Recommendation {
+interface PassionProject {
   title: string;
   description: string;
-  category: string;
-  timeCommitment: string;
-  cost: string;
-  difficulty: string;
-  benefits: string[];
-  nextSteps: string[];
-  format?: string;
+  format: string;
+  steps: string[];
+}
+
+interface ExtracurricularActivity {
+  name: string;
+  type: string;
+  reason: string;
+}
+
+interface ComplementaryActivity {
+  name: string;
+  type: string;
 }
 
 export default function ResultsPage() {
   const router = useRouter();
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [passionProjects, setPassionProjects] = useState<any[]>([]);
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
+  // Track which tab is open for each project
+  const [openTabs, setOpenTabs] = useState<{ [key: number]: string | null }>({});
 
   useEffect(() => {
     // Get data from localStorage
@@ -31,10 +41,8 @@ export default function ResultsPage() {
     if (storedRecommendations && storedUserData) {
       const parsedRecommendations = JSON.parse(storedRecommendations);
       const parsedUserData = JSON.parse(storedUserData);
-      
-      setRecommendations(parsedRecommendations);
+      setPassionProjects(parsedRecommendations.passion_projects || []);
       setUserData(parsedUserData);
-      
       // Save recommendations with timestamp for later access
       const savedRecommendations = {
         recommendations: parsedRecommendations,
@@ -49,7 +57,7 @@ export default function ResultsPage() {
       if (savedRecommendations) {
         try {
           const parsed = JSON.parse(savedRecommendations);
-          setRecommendations(parsed.recommendations);
+          setPassionProjects(parsed.recommendations.passion_projects || []);
           setUserData(parsed.userData);
           setIsSaved(true);
         } catch (error) {
@@ -71,50 +79,114 @@ export default function ResultsPage() {
     router.push('/');
   };
 
+  const handleTabClick = (projectIdx: number, tab: string) => {
+    setOpenTabs(prev => ({
+      ...prev,
+      [projectIdx]: prev[projectIdx] === tab ? null : tab
+    }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your recommendations...</p>
+          <p className="text-gray-600 mb-2">Loading your recommendations...</p>
+          <p className="text-blue-700 font-medium animate-pulse">Generating your results...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <Logo size="md" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200 to-indigo-300 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-200 to-pink-300 rounded-full opacity-20 blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-indigo-200 to-blue-300 rounded-full opacity-10 blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        {/* Floating particles */}
+        <div className="absolute top-20 left-20 w-2 h-2 bg-blue-400 rounded-full opacity-60 animate-bounce"></div>
+        <div className="absolute top-40 right-32 w-1 h-1 bg-purple-400 rounded-full opacity-60 animate-bounce" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute bottom-32 left-32 w-1.5 h-1.5 bg-indigo-400 rounded-full opacity-60 animate-bounce" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-20 right-20 w-1 h-1 bg-pink-400 rounded-full opacity-60 animate-bounce" style={{animationDelay: '1.5s'}}></div>
+      </div>
+      {/* Sidebar */}
+      <Sidebar />
+      {/* Navigation Bar */}
+      <div className="bg-white/95 backdrop-blur-sm shadow-lg border-b border-white/20 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between ml-6">
             <div className="flex items-center space-x-4">
-              {isSaved && (
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Recommendations saved</span>
-                </div>
-              )}
-              <div className="text-sm text-gray-600">
-                Your Recommendations
+              <Logo size="xl" showText={false} />
+              <div>
+                <h3 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">Passion Project <span className="text-indigo-700">Builder</span></h3>
+                <p className="text-base text-black -mt-1">Discover extracurricular projects that match your passions</p>
               </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-600">You are in Free Plan</span>
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-1">
+                <span>+</span>
+                <span>Upgrade</span>
+              </button>
+              <button className="p-2">
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+              <button className="p-2">
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+              </button>
+              <button className="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
+        <div className="container mx-auto px-4">
+          <nav className="flex items-center space-x-1 py-2">
+              <a href="#" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
+                Build Profile
+              </a>
+              <a href="#" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
+                Profile Assessment
+              </a>
+              <a href="#" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
+                Position Statement
+              </a>
+              <a href="#" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
+                Major Recommendation
+              </a>
+              <a href="#" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
+                Build College List
+              </a>
+              <a href="#" className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
+                Explore Activities
+              </a>
+              <a href="#" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
+                Find Scholarship
+              </a>
+              <a href="#" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
+                Essay Tutor
+              </a>
+            </nav>
+        </div>
       </div>
-
-      <div className="container mx-auto px-4 py-12">
+  <div className="pl-24">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 mt-16 animate-fade-in">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
               Your Personalized
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600"> Recommendations</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Based on your interests and goals, here are some extracurricular activities 
-              that could help you develop your passions and build your resume.
+              Based on your interests and goals, here are some passion projects that could help you develop your passions and build your resume.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
               <p className="text-blue-800 text-sm">
@@ -125,126 +197,209 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Recommendations */}
-        <div className="max-w-6xl mx-auto space-y-8">
-          {recommendations.map((recommendation, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-              {/* Recommendation Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="bg-white/20 text-white text-sm font-medium px-3 py-1 rounded-full backdrop-blur-sm">
-                        {recommendation.category}
-                      </span>
-                      <span className="bg-green-500/20 text-green-100 text-sm font-medium px-3 py-1 rounded-full backdrop-blur-sm">
-                        {recommendation.difficulty}
-                      </span>
-                    </div>
-                    <h2 className="text-2xl font-bold text-white mb-3">
-                      {recommendation.title}
-                    </h2>
-                    <p className="text-blue-100 text-lg leading-relaxed">
-                      {recommendation.description}
-                    </p>
+        {/* Passion Projects Section */}
+        <div className="max-w-4xl mx-auto space-y-12 mb-12">
+          {passionProjects.map((project, idx) => (
+            <div key={idx} className="bg-gradient-to-r from-blue-200 to-indigo-300 rounded-xl shadow-lg border border-blue-300 overflow-hidden">
+              <div className="px-8 py-6">
+                {/* Icon and Title */}
+                <h2 className="text-2xl font-bold text-black mb-2 font-serif tracking-tight flex items-center justify-center">
+                  {project.title} {project.icon && <span className="ml-2 text-2xl align-middle">{project.icon}</span>}
+                </h2>
+                {/* Description rendering */}
+                {project.description && typeof project.description === 'object' ? (
+                  <div className="text-black mb-4 space-y-2">
+                    {project.description.overview && (
+                      <div className="pb-3 border-b border-gray-200">
+                        <span className="font-semibold text-lg" style={{ fontFamily: 'Urbanist, sans-serif' }}>📘 Overview:</span> {project.description.overview}
+                      </div>
+                    )}
+                    {(project.description.skills_developed || project.description.skillsDeveloped) && Array.isArray(project.description.skills_developed || project.description.skillsDeveloped) ? (
+                      <div className="pb-3 border-b border-gray-200">
+                        <span className="font-semibold text-lg" style={{ fontFamily: 'Urbanist, sans-serif' }}>🛠️ Skills Developed:</span> 
+                        <ul className="list-disc list-inside ml-4">
+                          {(project.description.skills_developed || project.description.skillsDeveloped).map((skill: string, i: number) => <li key={i}>{skill}</li>)}
+                        </ul>
+                      </div>
+                    ) : (project.description.skills_developed || project.description.skillsDeveloped) ? (
+                      <div className="pb-3 border-b border-gray-200">
+                        <span className="font-semibold text-lg" style={{ fontFamily: 'Urbanist, sans-serif' }}>🛠️ Skills Developed:</span> {project.description.skills_developed || project.description.skillsDeveloped}
+                      </div>
+                    ) : null}
+                    {project.description.format && (
+                      <div className="pb-3 border-b border-gray-200">
+                        <span className="font-semibold text-lg" style={{ fontFamily: 'Urbanist, sans-serif' }}>🧾 Format:</span> {project.description.format}
+                      </div>
+                    )}
+                    {project.description.prerequisites && (
+                      <div className="pb-3 border-b border-gray-200">
+                        <span className="font-semibold text-lg" style={{ fontFamily: 'Urbanist, sans-serif' }}>🧠 Prerequisites:</span> {project.description.prerequisites}
+                      </div>
+                    )}
+                    {(project.description.time_commitment || project.description.timeCommitment) && (
+                      <div className="pb-3">
+                        <span className="font-semibold text-lg" style={{ fontFamily: 'Urbanist, sans-serif' }}>⏳ Time Commitment:</span> {project.description.time_commitment || project.description.timeCommitment}
+                      </div>
+                    )}
                   </div>
-                  <div className="ml-6">
-                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                      <span className="text-white font-bold text-xl">{index + 1}</span>
-                    </div>
-                  </div>
+                ) : (
+                  <p className="text-black mb-4">{project.description}</p>
+                )}
+                {/* Tab Buttons */}
+                <div className="flex flex-wrap gap-4 mb-4">
+                  <button
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
+                    openTabs[idx]==='reasoning' 
+                    ? 'bg-blue-200 text-blue-800 hover:bg-blue-300' 
+                    : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                  }`}
+                  style={{ fontFamily: 'Urbanist, sans-serif' }}
+                  onClick={() => handleTabClick(idx, 'reasoning')}
+                >
+                  🎯 Personalized Reasoning
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
+                    openTabs[idx]==='benefits'
+                    ? 'bg-cyan-100 text-cyan-700 shadow-lg hover:bg-cyan-200'
+                    : 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100 hover:shadow-md'
+                  }`}
+                  style={{ fontFamily: 'Urbanist, sans-serif' }}
+                  onClick={() => handleTabClick(idx, 'benefits')}
+                >
+                  🌟 Benefits
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 border-b-2 ${
+                    openTabs[idx]==='timeline'
+                    ? 'bg-purple-100 text-purple-800 border-purple-500'
+                    : 'bg-purple-50 text-purple-800 border-transparent hover:bg-purple-100 hover:border-purple-400'
+                  }`}
+                  style={{ fontFamily: 'Urbanist, sans-serif' }}
+                  onClick={() => handleTabClick(idx, 'timeline')}
+                >
+                  📅 Timeline
+                </button>
                 </div>
-              </div>
-
-              <div className="p-8">
-                {/* Details Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                    <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                      </svg>
-                      Time Commitment
-                    </h4>
-                    <p className="text-blue-700">{recommendation.timeCommitment}</p>
-                  </div>
-                  <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-                    <h4 className="font-semibold text-green-900 mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                      </svg>
-                      Cost
-                    </h4>
-                    <p className="text-green-700">{recommendation.cost}</p>
-                  </div>
-                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-100">
-                    <h4 className="font-semibold text-purple-900 mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                      </svg>
-                      Difficulty Level
-                    </h4>
-                    <p className="text-purple-700">{recommendation.difficulty}</p>
-                  </div>
-                </div>
-
-                {/* Format for Passion Projects */}
-                {recommendation.format && (
-                  <div className="mb-8">
-                    <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-200">
-                      <h4 className="font-semibold text-orange-900 mb-2 flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                        </svg>
-                        Project Format
-                      </h4>
-                      <p className="text-orange-800 font-medium">{recommendation.format}</p>
+                {/* Tab Content */}
+                {openTabs[idx]==='reasoning' && (
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 mb-2">
+                    <h3 className="font-semibold text-blue-800 mb-3 text-lg" style={{ fontFamily: 'Urbanist, sans-serif' }}>🎯 Personalized Reasoning</h3>
+                    <div className="space-y-2">
+                      {(() => {
+                        const reasoning = project.personalized_reasoning || project.reasoning?.personalized_reasoning || project.reasoning;
+                        if (!reasoning) return null;
+                        
+                        // Split by multiple sentence endings and clean up
+                        const sentences = reasoning
+                          .split(/[.!?]+/)
+                          .map((sentence: string) => sentence.trim())
+                          .filter((sentence: string) => sentence.length > 0)
+                          .map((sentence: string) => {
+                            // Clean up any extra whitespace and ensure proper capitalization
+                            return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+                          });
+                        
+                        return sentences.map((sentence: string, index: number) => (
+                          <p key={index} className="text-gray-700">
+                            {sentence}.
+                          </p>
+                        ));
+                      })()}
                     </div>
                   </div>
                 )}
+                {openTabs[idx]==='benefits' && (
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 mb-2">
+                    <h3 className="font-semibold text-blue-800 mb-3 text-lg" style={{ fontFamily: 'Urbanist, sans-serif' }}>🌟 Benefits</h3>
+                    <div className="space-y-2">
+                      {(() => {
+                        const benefits = (project.benefits || project.benefits_list || project.benefits?.benefits_list || []);
+                        const icons = ['🌱', '🚀', '💡', '📚'];
+                        
+                        return benefits.map((benefit: string, bidx: number) => {
+                          const icon = icons[bidx % 4];
+                          return (
+                            <div key={bidx} className="flex items-start space-x-2">
+                              <span className="text-lg">{icon}</span>
+                              <span>{benefit}</span>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                    {(project.benefits_importance || project.benefits?.elaboration || project.benefits_explanation || project.benefit_explanation) && (
+                      <p className="mt-2 text-gray-700">{project.benefits_importance || project.benefits?.elaboration || project.benefits_explanation || project.benefit_explanation}</p>
+                    )}
+                  </div>
+                )}
+                {openTabs[idx]==='timeline' && (
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 mb-2">
+                    <h3 className="font-semibold text-blue-800 mb-3 text-lg" style={{ fontFamily: 'Urbanist, sans-serif' }}>📅 Timeline</h3>
+                    <div className="space-y-3">
+                      {(() => {
+                        const timelineArray: string[] = [];
 
-                {/* Benefits and Next Steps */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
-                    <h4 className="font-semibold text-green-900 mb-4 text-lg flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Key Benefits
-                    </h4>
-                    <ul className="space-y-3">
-                      {recommendation.benefits.map((benefit, benefitIndex) => (
-                        <li key={benefitIndex} className="flex items-start gap-3">
-                          <span className="text-green-500 mt-1 flex-shrink-0">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </span>
-                          <span className="text-green-800">{benefit}</span>
-                        </li>
-                      ))}
-                    </ul>
+                        if (project.timeline) {
+                          // Case 1: already an array of strings
+                          if (Array.isArray(project.timeline)) {
+                            timelineArray.push(...project.timeline as string[]);
+                          }
+                          // Case 2: object with nested array in "timeline" key (OpenAI sometimes wraps this)
+                          else if (project.timeline && Array.isArray((project.timeline as any).timeline)) {
+                            timelineArray.push(...(project.timeline as any).timeline);
+                          }
+                          // Case 3: string that needs to be split by commas
+                          else if (typeof project.timeline === 'string') {
+                            const timelineString = project.timeline as string;
+                            // Split by commas and clean up
+                            const splitTimeline = timelineString.split(',').map(item => item.trim());
+                            timelineArray.push(...splitTimeline);
+                          }
+                          // Case 4: object with week keys – convert values to array
+                          else if (typeof project.timeline === 'object') {
+                            Object.values(project.timeline).forEach((val: any) => {
+                              if (Array.isArray(val)) {
+                                timelineArray.push(...val);
+                              } else if (typeof val === 'string') {
+                                timelineArray.push(val);
+                              }
+                            });
+                          }
+                        }
+
+                        const uniqueTimeline = [...new Set(timelineArray.map((s: string) => s.trim()))];
+                        const icons = ['📌', '✔️', '🗂️'];
+
+                        return uniqueTimeline.map((item: string, tidx: number) => {
+                          const icon = icons[tidx % 3];
+                          const weekMatch = item.match(/^(Week \d+:)/);
+                          
+                          if (weekMatch) {
+                            const weekPart = weekMatch[1];
+                            const contentPart = item.substring(weekMatch[1].length);
+                            return (
+                              <div key={tidx} className="flex items-start space-x-2">
+                                <span className="text-lg">{icon}</span>
+                                <div>
+                                  <span className="font-bold text-blue-800">{weekPart}</span>
+                                  <span>{contentPart}</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <div key={tidx} className="flex items-start space-x-2">
+                              <span className="text-lg">{icon}</span>
+                              <div>{item}</div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
                   </div>
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-                    <h4 className="font-semibold text-blue-900 mb-4 text-lg flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                      </svg>
-                      Next Steps
-                    </h4>
-                    <ol className="space-y-3">
-                      {recommendation.nextSteps.map((step, stepIndex) => (
-                        <li key={stepIndex} className="flex items-start gap-3">
-                          <span className="bg-blue-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center mt-0.5 flex-shrink-0">
-                            {stepIndex + 1}
-                          </span>
-                          <span className="text-blue-800">{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           ))}
@@ -253,33 +408,26 @@ export default function ResultsPage() {
         {/* Action Buttons */}
         <div className="text-center mt-16 space-y-6">
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Ready to Get Started?</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Looking for Different Recommendations?</h3>
             <p className="text-gray-600 mb-6">
-              Choose the recommendation that excites you most and begin your journey!
+              Try adjusting your interests and goals on the input form.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => router.push('/')}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-8 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg transform hover:scale-105"
+                style={{ fontFamily: 'Urbanist, sans-serif' }}
               >
-                Get New Recommendations
-              </button>
-              <button
-                onClick={() => window.print()}
-                className="bg-gray-100 text-gray-700 font-semibold py-3 px-8 rounded-lg hover:bg-gray-200 transition-all duration-200 border border-gray-300"
-              >
-                Print Recommendations
+                Return to Input Page
               </button>
               <button
                 onClick={clearSavedData}
                 className="bg-red-50 text-red-700 font-semibold py-3 px-8 rounded-lg hover:bg-red-100 transition-all duration-200 border border-red-200"
+                style={{ fontFamily: 'Urbanist, sans-serif' }}
               >
                 Clear Saved Data
               </button>
             </div>
-          </div>
-          <div className="text-gray-500 text-sm">
-            Want different suggestions? Try adjusting your interests and goals on the form.
           </div>
         </div>
       </div>
