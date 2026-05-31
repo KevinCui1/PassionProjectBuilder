@@ -1,5 +1,10 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Large media files
+*.mov
+*.mp4
+*.avi
+
 # dependencies
 /node_modules
 /.pnp
